@@ -47,16 +47,16 @@ vector<vector<int> > tGame::executeGame(tAgent* agent,int paddleWidth,FILE *f,bo
 						grid[(Ox+i+20)%20]=1;
 					for(i=0;i<4+paddleWidth;i++)
 						if(grid[(Ax+i)%20]==1) 
-                            hit=true;
+							hit=true;
 					agent->states[0]=grid[Ax];
 					agent->states[1]=grid[(Ax+1)%20];
 					agent->states[2]=grid[(Ax+paddleWidth+2)%20];
 					agent->states[3]=grid[(Ax+paddleWidth+3)%20];
 					agent->states[maxNodes-1]=0;
 					agent->states[maxNodes-2]=0;
-                    if(ko!=-1)
-                        agent->states[ko]=setTo;
-                    E=0;
+					if(ko!=-1)
+						agent->states[ko]=setTo;
+					E=0;
 					I=0;
 					H=0;
 					M=0;
@@ -80,11 +80,11 @@ vector<vector<int> > tGame::executeGame(tAgent* agent,int paddleWidth,FILE *f,bo
 
 					agent->updateStates();
 
-                    T1=0;
+					T1=0;
 					for(i=0;i<16;i++)
 						T1|=(agent->states[i]&1)<<i;
 
-                    H=0;
+					H=0;
 					M=0;
 					for(i=4;i<16;i++)
 						H=(H<<1)+agent->states[i];
@@ -93,18 +93,18 @@ vector<vector<int> > tGame::executeGame(tAgent* agent,int paddleWidth,FILE *f,bo
 					dummyH.push_back(H);
 					dummyM.push_back(M);
 					dummyT0.push_back((E<<16)+(I<<12)+H);
-                    R0.push_back(T0);
-                    R1.push_back(T1);
+					R0.push_back(T0);
+					R1.push_back(T1);
 
-                    int action=(agent->states[maxNodes-1])+(agent->states[maxNodes-2]<<1);
-                    switch (action) {
+					int action=(agent->states[maxNodes-1])+(agent->states[maxNodes-2]<<1);
+					switch (action) {
 						case 0: case 3: break;
 						case 1:Ax=(Ax+1)%20;break;
 						case 2:Ax=(Ax-1+20)%20;break;
 					}
 					Ox=(Ox+20+d)%20;
-                    if(f!=NULL)
-                        fprintf(f,"%i,%i,%i,%i\n",Ox,u,w,Ax);
+					if(f!=NULL)
+						fprintf(f,"%i,%i,%i,%i\n",Ox,u,w,Ax);
 
 				}
 				if(w==2){
@@ -137,17 +137,17 @@ vector<vector<int> > tGame::executeGame(tAgent* agent,int paddleWidth,FILE *f,bo
 	}
 	agent->correct=correct;
 	agent->incorrect=incorrect;
-    if(logStates){
-        retValue.resize(2);
-        retValue[0]=R0;
-        retValue[1]=R1;
-    } else {
-        retValue.push_back(dummyE);
-        retValue.push_back(dummyI);
-        retValue.push_back(dummyH);
-        retValue.push_back(dummyM);
-        retValue.push_back(dummyT0);
-    }
+	if(logStates){
+		retValue.resize(2);
+		retValue[0]=R0;
+		retValue[1]=R1;
+	} else {
+		retValue.push_back(dummyE);
+		retValue.push_back(dummyI);
+		retValue.push_back(dummyH);
+		retValue.push_back(dummyM);
+		retValue.push_back(dummyT0);
+	}
 	RValue.push_back(dummyE); // env
 	RValue.push_back(dummyI); // internal
 	RValue.push_back(dummyH); //hiddne
@@ -165,7 +165,7 @@ vector<vector<int> > tGame::executeGame(tAgent* agent,int paddleWidth,FILE *f,bo
 		if (sumPath > longestPath) longestPath = sumPath;
 	}
 	agent->Topology = longestPath;
-    return retValue;
+	return retValue;
 }
 
 double tGame::mutualInformation(vector<int> A,vector<int>B){
@@ -196,7 +196,7 @@ double tGame::mutualInformation(vector<int> A,vector<int>B){
 			if((pX[*aI]!=0.0)&&(pY[*bI]!=0.0)&&(pXY[*aI][*bI]!=0.0))
 				I+=pXY[*aI][*bI]*log2(pXY[*aI][*bI]/(pX[*aI]*pY[*bI]));
 	return I;
-	
+
 }
 
 double tGame::entropy(vector<int> list){
@@ -208,7 +208,7 @@ double tGame::entropy(vector<int> list){
 	for(i=0;i<list.size();i++)
 		p[list[i]]+=c;
 	for (pI=p.begin();pI!=p.end();pI++) {
-			H+=p[pI->first]*log2(p[pI->first]);	
+		H+=p[pI->first]*log2(p[pI->first]);	
 	}
 	return -1.0*H;
 }
@@ -262,18 +262,18 @@ double tGame::computeAtomicPhi(vector<int>A, int states){
 }
 
 /*
-double tGame::computeAtomicPhi(vector<int> T0,vector<int> T1,int states){
+	double tGame::computeAtomicPhi(vector<int> T0,vector<int> T1,int states){
 	int i;
 	double P,EIsystem;
 	EIsystem=ei(T0,T1,(1<<states)-1);
 	P=0.0;
 	for(i=0;i<states;i++){
-		double EIP=ei(T0,T1,1<<i);
+	double EIP=ei(T0,T1,1<<i);
 //		cout<<EIP<<endl;
-		P+=EIP;
-	}
+P+=EIP;
+}
 //	cout<<-EIsystem+P<<" "<<EIsystem<<" "<<P<<" "<<T0.size()<<" "<<T1.size()<<endl;
-	return -EIsystem+P;
+return -EIsystem+P;
 }
 */
 
@@ -291,35 +291,35 @@ double tGame::computeR(vector<vector<int> > table,size_t howFarBack){
 		table[4].push_back((table[0][i]<<14)+(table[1][i]<<10)+table[2][i]);
 	}
 	Iwh=mutualInformation(table[0],table[2]);
-    Iws=mutualInformation(table[0],table[1]);
-    Ish=mutualInformation(table[1],table[2]);
-    Hh=entropy(table[2]);
-    Hs=entropy(table[1]);
-    Hw=entropy(table[0]);
-    Hhws=entropy(table[4]);
-    delta=Hhws+Iwh+Iws+Ish-Hh-Hs-Hw;
-    R=Iwh-delta;
-  	return R;
+	Iws=mutualInformation(table[0],table[1]);
+	Ish=mutualInformation(table[1],table[2]);
+	Hh=entropy(table[2]);
+	Hs=entropy(table[1]);
+	Hw=entropy(table[0]);
+	Hhws=entropy(table[4]);
+	delta=Hhws+Iwh+Iws+Ish-Hh-Hs-Hw;
+	R=Iwh-delta;
+	return R;
 }
 
 double tGame::computeRGiven(vector<int>W,vector<int>S,vector<int>B,int nrWstates,int nrSstates,int nrBstates){
 	double Iwh,Iws,Ish,Hh,Hs,Hw,Hhws,delta,R;
 	size_t i;
-    vector<int> total;
+	vector<int> total;
 	total.clear();
 	for(i=0;i<W.size();i++){
 		total.push_back((W[i]<<(nrBstates+nrWstates))+(S[i]<<nrBstates)+B[i]);
 	}
 	Iwh=mutualInformation(W,B);
-    Iws=mutualInformation(W,S);
-    Ish=mutualInformation(S,B);
-    Hh=entropy(B);
-    Hs=entropy(S);
-    Hw=entropy(W);
-    Hhws=entropy(total);
-    delta=Hhws+Iwh+Iws+Ish-Hh-Hs-Hw;
-    R=Iwh-delta;
-  	return R;
+	Iws=mutualInformation(W,S);
+	Ish=mutualInformation(S,B);
+	Hh=entropy(B);
+	Hs=entropy(S);
+	Hw=entropy(W);
+	Hhws=entropy(total);
+	delta=Hhws+Iwh+Iws+Ish-Hh-Hs-Hw;
+	R=Iwh-delta;
+	return R;
 
 }
 
@@ -362,164 +362,164 @@ double tGame::predictNextInput(vector<int>A){
 }
 
 void tGame::represenationDecomposition(tAgent* agent,int paddleWidth,char* filename){
-    vector<vector<int> > table=executeGame(agent, paddleWidth, NULL,false,-1,-1);
-    int W,B;
-    size_t i,j;
-    double R;
-    int bitsumW,bitsumB;
-    FILE *F=fopen(filename,"w+t");
-    vector<int> world,sensors,brain;
-    cout<<"fitness of agent: "<<agent->correct<<endl;
-    world.resize(table[0].size());
-    sensors.resize(table[0].size());
-    brain.resize(table[0].size());
-    for(W=1;W<16;W++){
-        for(B=1;B<1024;B++){
-            cout<<W<<" "<<B<<" ";
-            fprintf(F,"%i   %i  ",W,B);
-            bitsumW=0;
-            bitsumB=0;
-            for(i=0;i<4;i++){
-                cout<<((W>>i)&1)<<" ";
-                fprintf(F,"%i   ",((W>>i)&1));
-                bitsumW+=(W>>i)&1;
-            }
-            for(i=0;i<10;i++){
-                cout<<((B>>i)&1)<<" ";
-                fprintf(F,"%i   ",((B>>i)&1));
-                bitsumB+=(B>>i)&1;
-            }
-            cout<<bitsumW<<" "<<bitsumB<<" ";
-            fprintf(F,"%i   %i  ",bitsumW,bitsumB);
-            for(j=0;j<table[0].size();j++){
-                world[j]=table[0][j]&W;
-                sensors[j]=table[1][j];
-                brain[j]=table[2][j]&B;
-            }
-            R=computeRGiven(world, sensors, brain, 4,4,10);
-            if(R<0.0) R=0.0;
-            cout<<R<<endl;
-            fprintf(F,"%f\n",R);
-        }
-    }
-    fclose(F);
+	vector<vector<int> > table=executeGame(agent, paddleWidth, NULL,false,-1,-1);
+	int W,B;
+	size_t i,j;
+	double R;
+	int bitsumW,bitsumB;
+	FILE *F=fopen(filename,"w+t");
+	vector<int> world,sensors,brain;
+	cout<<"fitness of agent: "<<agent->correct<<endl;
+	world.resize(table[0].size());
+	sensors.resize(table[0].size());
+	brain.resize(table[0].size());
+	for(W=1;W<16;W++){
+		for(B=1;B<1024;B++){
+			cout<<W<<" "<<B<<" ";
+			fprintf(F,"%i   %i  ",W,B);
+			bitsumW=0;
+			bitsumB=0;
+			for(i=0;i<4;i++){
+				cout<<((W>>i)&1)<<" ";
+				fprintf(F,"%i   ",((W>>i)&1));
+				bitsumW+=(W>>i)&1;
+			}
+			for(i=0;i<10;i++){
+				cout<<((B>>i)&1)<<" ";
+				fprintf(F,"%i   ",((B>>i)&1));
+				bitsumB+=(B>>i)&1;
+			}
+			cout<<bitsumW<<" "<<bitsumB<<" ";
+			fprintf(F,"%i   %i  ",bitsumW,bitsumB);
+			for(j=0;j<table[0].size();j++){
+				world[j]=table[0][j]&W;
+				sensors[j]=table[1][j];
+				brain[j]=table[2][j]&B;
+			}
+			R=computeRGiven(world, sensors, brain, 4,4,10);
+			if(R<0.0) R=0.0;
+			cout<<R<<endl;
+			fprintf(F,"%f\n",R);
+		}
+	}
+	fclose(F);
 }
 
 void tGame::represenationPerNodeSummary(tAgent* agent,int paddleWidth,char* filename){
-    vector<vector<int> > table=executeGame(agent, paddleWidth, NULL,false,-1,-1);
-    int W,B;
-    size_t i,j;
-    double R;
-    int bitsumW,bitsumB;
-    double maxR;
-    int minP,bestPartition;
-    FILE *F=fopen(filename,"w+t");
-    vector<int> world,sensors,brain;
-    cout<<"fitness of agent: "<<agent->correct<<endl;
-    world.resize(table[0].size());
-    sensors.resize(table[0].size());
-    brain.resize(table[0].size());
-//    for(W=1;W<16;W=W<<1){
-    for(W=1;W<16;W++){
-        maxR=0.0;
-        bestPartition=0;
-        for(B=1;B<1024;B++){
-            //cout<<W<<" "<<B<<" ";
-            //fprintf(F,"%i   %i  ",W,B);
-            bitsumW=0;
-            bitsumB=0;
-            for(i=0;i<4;i++){
-                bitsumW+=(W>>i)&1;
-            }
-            for(i=0;i<10;i++){
-                bitsumB+=(B>>i)&1;
-            }
-            for(j=0;j<table[0].size();j++){
-                world[j]=table[0][j]&W;
-                sensors[j]=table[1][j];
-                brain[j]=table[2][j]&B;
-            }
-            R=computeRGiven(world, sensors, brain, 4,4,10);
-            if(R<0.0) R=0.0;
-            if(R==maxR){
-                if(bitsumB<minP){
-                    minP=bitsumB;
-                    bestPartition=B;
-                }
-            }
-            if(R>maxR){
-                maxR=R;
-                minP=bitsumB;
-                bestPartition=B;
-            }
-        }
-        cout<<W<<" "<<bestPartition<<" ";
-        fprintf(F,"%i   %i  ",W,bestPartition);
-        for(i=0;i<4;i++){
-            cout<<((W>>i)&1)<<" ";
-            fprintf(F,"%i   ",((W>>i)&1));
-        }
-        for(i=0;i<10;i++){
-            cout<<((bestPartition>>i)&1)<<" ";
-            fprintf(F,"%i   ",((bestPartition>>i)&1));
-        }
-        cout<<R<<endl;
-        fprintf(F,"%f\n",R);
-    }
-    fclose(F);
+	vector<vector<int> > table=executeGame(agent, paddleWidth, NULL,false,-1,-1);
+	int W,B;
+	size_t i,j;
+	double R;
+	int bitsumW,bitsumB;
+	double maxR;
+	int minP,bestPartition;
+	FILE *F=fopen(filename,"w+t");
+	vector<int> world,sensors,brain;
+	cout<<"fitness of agent: "<<agent->correct<<endl;
+	world.resize(table[0].size());
+	sensors.resize(table[0].size());
+	brain.resize(table[0].size());
+	//    for(W=1;W<16;W=W<<1){
+	for(W=1;W<16;W++){
+		maxR=0.0;
+		bestPartition=0;
+		for(B=1;B<1024;B++){
+			//cout<<W<<" "<<B<<" ";
+			//fprintf(F,"%i   %i  ",W,B);
+			bitsumW=0;
+			bitsumB=0;
+			for(i=0;i<4;i++){
+				bitsumW+=(W>>i)&1;
+			}
+			for(i=0;i<10;i++){
+				bitsumB+=(B>>i)&1;
+			}
+			for(j=0;j<table[0].size();j++){
+				world[j]=table[0][j]&W;
+				sensors[j]=table[1][j];
+				brain[j]=table[2][j]&B;
+			}
+			R=computeRGiven(world, sensors, brain, 4,4,10);
+			if(R<0.0) R=0.0;
+			if(R==maxR){
+				if(bitsumB<minP){
+					minP=bitsumB;
+					bestPartition=B;
+				}
+			}
+			if(R>maxR){
+				maxR=R;
+				minP=bitsumB;
+				bestPartition=B;
+			}
+		}
+		cout<<W<<" "<<bestPartition<<" ";
+		fprintf(F,"%i   %i  ",W,bestPartition);
+		for(i=0;i<4;i++){
+			cout<<((W>>i)&1)<<" ";
+			fprintf(F,"%i   ",((W>>i)&1));
+		}
+		for(i=0;i<10;i++){
+			cout<<((bestPartition>>i)&1)<<" ";
+			fprintf(F,"%i   ",((bestPartition>>i)&1));
+		}
+		cout<<R<<endl;
+		fprintf(F,"%f\n",R);
+	}
+	fclose(F);
 }
 
 void tGame::getTableForPhi(tAgent *agent,char *filename){
-    FILE *f;
-    size_t j;
-    vector<vector<int> > table;
-    //state to state table for only the lifetime
-    f=fopen(filename,"w+t");
-    table=this->executeGame(agent, 2,NULL,true,-1,-1);
-    fprintf(f,"16\n");
-    for(j=0;j<table[0].size();j++){
-        fprintf(f,"%i   %i\n",table[0][j],table[1][j]);
-    }    
-    fclose(f);
+	FILE *f;
+	size_t j;
+	vector<vector<int> > table;
+	//state to state table for only the lifetime
+	f=fopen(filename,"w+t");
+	table=this->executeGame(agent, 2,NULL,true,-1,-1);
+	fprintf(f,"16\n");
+	for(j=0;j<table[0].size();j++){
+		fprintf(f,"%i   %i\n",table[0][j],table[1][j]);
+	}    
+	fclose(f);
 }
 void tGame::makeFullAnalysis(tAgent *agent,char *fileLead){
-    char filename[1000];
-    FILE *f;
-    size_t i,j;
-    vector<vector<int> > table;
-    
-    //representation table
-    sprintf(filename,"%s_representation.txt",fileLead);
-    represenationPerNodeSummary(agent, 2, filename);
-    //state to state table
-    sprintf(filename,"%s_FullLogicTable.txt",fileLead);
-    f=fopen(filename,"w+t");
-    agent->saveLogicTable(f);
-    fclose(f);
-    
-    //state to state table for only the lifetime
-    sprintf(filename,"%s_LifetimeLogicTable.txt",fileLead);
-    f=fopen(filename,"w+t");
-    table=this->executeGame(agent, 2,NULL,true,-1,-1);
-    for(i=0;i<16;i++)
-        fprintf(f,"T0_%i,",(int)i);
-    fprintf(f,",");
-    for(i=0;i<16;i++)
-        fprintf(f,"T1_%i,",(int)i);
-    fprintf(f,"\n");
-    for(j=0;j<table[0].size();j++){
-        for(i=0;i<16;i++)
-            fprintf(f,"%i,",(table[0][j]>>i)&1);
-        fprintf(f,",");
-        for(i=0;i<16;i++)
-            fprintf(f,"%i,",(table[1][j]>>i)&1);
-        fprintf(f,"\n");
-    }
-    fclose(f);
-    
-    //ko table
-    sprintf(filename,"%s_KOdata.txt",fileLead);
-    f=fopen(filename,"w+t");
+	char filename[1000];
+	FILE *f;
+	size_t i,j;
+	vector<vector<int> > table;
+
+	//representation table
+	sprintf(filename,"%s_representation.txt",fileLead);
+	represenationPerNodeSummary(agent, 2, filename);
+	//state to state table
+	sprintf(filename,"%s_FullLogicTable.txt",fileLead);
+	f=fopen(filename,"w+t");
+	agent->saveLogicTable(f);
+	fclose(f);
+
+	//state to state table for only the lifetime
+	sprintf(filename,"%s_LifetimeLogicTable.txt",fileLead);
+	f=fopen(filename,"w+t");
+	table=this->executeGame(agent, 2,NULL,true,-1,-1);
+	for(i=0;i<16;i++)
+		fprintf(f,"T0_%i,",(int)i);
+	fprintf(f,",");
+	for(i=0;i<16;i++)
+		fprintf(f,"T1_%i,",(int)i);
+	fprintf(f,"\n");
+	for(j=0;j<table[0].size();j++){
+		for(i=0;i<16;i++)
+			fprintf(f,"%i,",(table[0][j]>>i)&1);
+		fprintf(f,",");
+		for(i=0;i<16;i++)
+			fprintf(f,"%i,",(table[1][j]>>i)&1);
+		fprintf(f,"\n");
+	}
+	fclose(f);
+
+	//ko table
+	sprintf(filename,"%s_KOdata.txt",fileLead);
+	f=fopen(filename,"w+t");
 	executeGame(agent, 2,NULL,true,-1,-1);
 	fprintf(f,"%i",agent->correct);
 	for(i=0;i<16;i++)
@@ -528,25 +528,25 @@ void tGame::makeFullAnalysis(tAgent *agent,char *fileLead){
 			fprintf(f,"	%i",agent->correct);
 		}
 	fprintf(f,"\n");
-    fclose(f);
-    //dot file
-    sprintf(filename,"%s_EdgeList.txt",fileLead);
-    agent->saveEdgeList(filename);
-     
+	fclose(f);
+	//dot file
+	sprintf(filename,"%s_EdgeList.txt",fileLead);
+	agent->saveEdgeList(filename);
+
 }
 
 
 double tGame::brainEntropy(vector<int> states){
-    double H=0.0;
-    vector<int> L;
-    size_t i,j;
-    for(j=0;j<maxNodes;j++){
-        L.clear();
-        for(i=0;i<states.size();i++)
-            L.push_back((states[i]>>j)&1);
-        H+=entropy(L);
-    }
-    return H;
+	double H=0.0;
+	vector<int> L;
+	size_t i,j;
+	for(j=0;j<maxNodes;j++){
+		L.clear();
+		for(i=0;i<states.size();i++)
+			L.push_back((states[i]>>j)&1);
+		H+=entropy(L);
+	}
+	return H;
 }
 
 

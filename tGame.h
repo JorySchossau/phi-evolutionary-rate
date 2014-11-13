@@ -27,25 +27,25 @@ using namespace std;
 #define cPI 3.14159265
 
 class tGame{
-public:
-	vector<vector<int> > executeGame(tAgent* agent,int paddleWidth,FILE *f,bool logStates,int ko, int setTo);
-	tGame();
-	~tGame();
-    void getTableForPhi(tAgent *agent,char *filename);
-    void represenationDecomposition(tAgent* agent,int paddleWidth,char* filename);
-    void represenationPerNodeSummary(tAgent* agent,int paddleWidth,char* filename);
-    void makeFullAnalysis(tAgent *agent,char *fileLead);
-	double mutualInformation(vector<int> A,vector<int>B);
-	double ei(vector<int> A,vector<int> B,int theMask);
-	double computeAtomicPhi(vector<int> A,int states);
-	double predictiveI(vector<int>A);
-	double nonPredictiveI(vector<int>A);
-	double predictNextInput(vector<int>A);
-	double computeR(vector<vector<int> > table,size_t howFarBack);
-	double computeOldR(vector<vector<int> > table);
-	double entropy(vector<int> list);
-    double computeRGiven(vector<int>W,vector<int>S,vector<int>B,int nrWstates,int nrSstates,int nrBstates);
-    double brainEntropy(vector<int> states);
+	public:
+		vector<vector<int> > executeGame(tAgent* agent,int paddleWidth,FILE *f,bool logStates,int ko, int setTo);
+		tGame();
+		~tGame();
+		void getTableForPhi(tAgent *agent,char *filename);
+		void represenationDecomposition(tAgent* agent,int paddleWidth,char* filename);
+		void represenationPerNodeSummary(tAgent* agent,int paddleWidth,char* filename);
+		void makeFullAnalysis(tAgent *agent,char *fileLead);
+		double mutualInformation(vector<int> A,vector<int>B);
+		double ei(vector<int> A,vector<int> B,int theMask);
+		double computeAtomicPhi(vector<int> A,int states);
+		double predictiveI(vector<int>A);
+		double nonPredictiveI(vector<int>A);
+		double predictNextInput(vector<int>A);
+		double computeR(vector<vector<int> > table,size_t howFarBack);
+		double computeOldR(vector<vector<int> > table);
+		double entropy(vector<int> list);
+		double computeRGiven(vector<int>W,vector<int>S,vector<int>B,int nrWstates,int nrSstates,int nrBstates);
+		double brainEntropy(vector<int> states);
 
 };
 #endif
