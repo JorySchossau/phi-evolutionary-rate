@@ -207,13 +207,13 @@ void tAgent::saveFromLMRCAtoNULL(FILE *statsFile,FILE *genomeFile){
 }
 void tAgent::saveLOD(FILE *statsFile,FILE *genomeFile, string experimentID, int replicateID, int progenitorDOB){
 	if (progenitorDOB==-1) { // we always pass -1 when invoking from main
-		fprintf(statsFile,"%s	%s	%s	%s	%s	%s	%s	%s	%s\n","DOB","genome_size","fitness","correct","incorrect","phi","r","topology","experimentID","replicateID");
+		fprintf(statsFile,"%s	%s	%s	%s	%s	%s	%s	%s	%s	%s\n","DOB","genome_size","fitness","correct","incorrect","phi","r","topology","experimentID","replicateID");
 	}
 	if(ancestor!=NULL) {
 		ancestor->saveLOD(statsFile,genomeFile, experimentID, replicateID, born);
 	} 
 	for (int i=born; i<progenitorDOB; ++i) {
-		fprintf(statsFile,"%i	%i	%f	%i	%i	%f	%f	%s	%i\n",born,(int)genome.size(),fitness,correct,incorrect,phi,R,Topology,experimentID.c_str(),replicateID);
+		fprintf(statsFile,"%i	%i	%f	%i	%i	%f	%f	%f	%s	%i\n",born,(int)genome.size(),fitness,correct,incorrect,phi,R,Topology,experimentID.c_str(),replicateID);
 	}
 	if(false){
 		fprintf(genomeFile,"%i	",ID);
