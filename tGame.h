@@ -28,7 +28,7 @@ using namespace std;
 
 class tGame{
 	public:
-		vector<vector<int> > executeGame(tAgent* agent,int paddleWidth,FILE *f,bool logStates,int ko, int setTo);
+		vector<vector<int> > executeGame(tAgent* const agent,int paddleWidth,FILE *f,bool logStates,int ko, int setTo);
 		tGame();
 		~tGame();
 		void getTableForPhi(tAgent *agent,char *filename);

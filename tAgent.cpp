@@ -108,6 +108,7 @@ void tAgent::inherit(tAgent *from,double mutationRate,int theTime){ // large mut
 		buffer.insert(buffer.begin(),genome.begin()+s,genome.begin()+s+w);
 		genome.insert(genome.begin()+o,buffer.begin(),buffer.end());
 	}
+	//if((((double)rand()/(double)RAND_MAX)<0.05)&&(genome.size()>1000)){
 	if((((double)rand()/(double)RAND_MAX)<0.02)&&(genome.size()>1000)){
 		//deletion
 		w=15+rand()&511;
@@ -117,7 +118,7 @@ void tAgent::inherit(tAgent *from,double mutationRate,int theTime){ // large mut
 	setupPhenotype();
 	fitness=0.0;
 	phitness=0.0;
-	phi=0.0;
+	Phi=0.0;
 	Topology=0.0;
 }
 void tAgent::setupPhenotype(void){
@@ -130,7 +131,7 @@ void tAgent::setupPhenotype(void){
 	for(i=0;i<genome.size();i++){
 		if((genome[i]==42)&&(genome[(i+1)%genome.size()]==(255-42))){
 			hmmu=new tHMMU;
-			hmmu->setupQuick(genome,i);
+			hmmu->setupQuick(genome,i); // deterministic organism
 			hmmus.push_back(hmmu);
 		}
 	}
@@ -213,7 +214,7 @@ void tAgent::saveLOD(FILE *statsFile,FILE *genomeFile, string experimentID, int 
 		ancestor->saveLOD(statsFile,genomeFile, experimentID, replicateID, born);
 	} 
 	for (int i=born; i<progenitorDOB; ++i) {
-		fprintf(statsFile,"%i	%i	%f	%i	%i	%f	%f	%f	%s	%i\n",born,(int)genome.size(),fitness,correct,incorrect,phi,R,Topology,experimentID.c_str(),replicateID);
+		fprintf(statsFile,"%i	%i	%f	%i	%i	%f	%f	%f	%s	%i\n",born,(int)genome.size(),fitness,correct,incorrect,Phi,R,Topology,experimentID.c_str(),replicateID);
 	}
 	if(false){
 		fprintf(genomeFile,"%i	",ID);

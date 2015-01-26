@@ -11,7 +11,8 @@
 
 #define maxNodes 16
 #define definedCue 0
-
+//const float fitnessPower = 1.004776882087206f;
+const float fitnessPower = 1.1;
 
 
 #endif

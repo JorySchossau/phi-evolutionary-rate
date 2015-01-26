@@ -9,6 +9,7 @@
 #include "tGame.h"
 #include <math.h>
 #include <numeric>
+#include "globalConst.h"
 
 
 
@@ -109,26 +110,26 @@ vector<vector<int> > tGame::executeGame(tAgent* agent,int paddleWidth,FILE *f,bo
 				}
 				if(w==2){
 					if(hit){
-						agent->fitness*=1.1;
+						agent->fitness*=fitnessPower;
 						agent->convFitness+=1.0;
 						correct++;
 					}
 					else {
 						agent->convFitness-=1.0;
-						agent->fitness/=1.1;
+						agent->fitness/=fitnessPower;
 						incorrect++;
 					}
 
 				}
 				else{
 					if(!hit){
-						agent->fitness*=1.1;
+						agent->fitness*=fitnessPower;
 						agent->convFitness+=1.0;
 						correct++;
 					}
 					else {
 						agent->convFitness-=1.0;
-						agent->fitness/=1.1;
+						agent->fitness/=fitnessPower;
 						incorrect++;
 					}
 				}
@@ -154,7 +155,7 @@ vector<vector<int> > tGame::executeGame(tAgent* agent,int paddleWidth,FILE *f,bo
 	RValue.push_back(dummyM); // 
 	RValue.push_back(dummyT0); // brain state
 
-	agent->phi=computeAtomicPhi(retValue[0], maxNodes);
+	agent->Phi=computeAtomicPhi(retValue[0], maxNodes);
 	agent->R=computeR(RValue,0);
 	agent->extra=1.0;
 	vector<vector<int>> paths = agent->getDistMap(agent->getBrainMap());
@@ -361,7 +362,7 @@ double tGame::predictNextInput(vector<int>A){
 	return mutualInformation(S, I);
 }
 
-void tGame::represenationDecomposition(tAgent* agent,int paddleWidth,char* filename){
+void tGame::represenationDecomposition(tAgent* const agent,int paddleWidth,char* filename){
 	vector<vector<int> > table=executeGame(agent, paddleWidth, NULL,false,-1,-1);
 	int W,B;
 	size_t i,j;

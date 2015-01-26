@@ -34,7 +34,7 @@ public:
 	vector<unsigned char> genome;
 	vector<tDot> dots;
 	double extra;
-	double H,nH,phi,R,Topology;
+	double H,nH,Phi,R,Topology;
 	tAgent *ancestor;
 	unsigned int nrPointingAtMe;
 	unsigned char states[maxNodes],newStates[maxNodes];
