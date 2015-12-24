@@ -24,8 +24,10 @@ tAgent::tAgent(){
 	nrOfOffspring=0;
 	totalSteps=0;
 	retired=false;
-	Topology=0;
+	Diameter=0;
 	food=0;
+   PIs2m=0.0;
+   PIs2s=0.0;
 }
 
 tAgent::~tAgent(){
@@ -108,8 +110,8 @@ void tAgent::inherit(tAgent *from,double mutationRate,int theTime){ // large mut
 		buffer.insert(buffer.begin(),genome.begin()+s,genome.begin()+s+w);
 		genome.insert(genome.begin()+o,buffer.begin(),buffer.end());
 	}
-	//if((((double)rand()/(double)RAND_MAX)<0.05)&&(genome.size()>1000)){
-	if((((double)rand()/(double)RAND_MAX)<0.02)&&(genome.size()>1000)){
+	if((((double)rand()/(double)RAND_MAX)<0.05)&&(genome.size()>1000)){
+	//if((((double)rand()/(double)RAND_MAX)<0.02)&&(genome.size()>1000)){
 		//deletion
 		w=15+rand()&511;
 		s=rand()%(genome.size()-w);
@@ -119,7 +121,11 @@ void tAgent::inherit(tAgent *from,double mutationRate,int theTime){ // large mut
 	fitness=0.0;
 	phitness=0.0;
 	Phi=0.0;
-	Topology=0.0;
+	Diameter=0.0;
+   Connectedness=0.0;
+   Sparseness=0.0;
+   PIs2m=0.0;
+   PIs2s=0.0;
 }
 void tAgent::setupPhenotype(void){
 	size_t i;
@@ -206,23 +212,29 @@ void tAgent::saveFromLMRCAtoNULL(FILE *statsFile,FILE *genomeFile){
 	//}
 	//if((saved)&&(retired)) genome.clear();
 }
-void tAgent::saveLOD(FILE *statsFile,FILE *genomeFile, string experimentID, int replicateID, int progenitorDOB){
+void tAgent::saveLOD_recursive(FILE *statsFile, const char* genomeFileNameBase, string experimentID, int replicateID, int progenitorDOB, int& iter_count){
 	if (progenitorDOB==-1) { // we always pass -1 when invoking from main
-		fprintf(statsFile,"%s	%s	%s	%s	%s	%s	%s	%s	%s	%s\n","DOB","genome_size","fitness","correct","incorrect","phi","r","topology","experimentID","replicateID");
+  fprintf(statsFile,"%s %s %s %s %s %s %s %s %s %s %s %s %s %s\n","DOB","genome_size","fitness","correct","incorrect","phi","r","diameter","connectedness","sparseness","pis2s","pis2m","experimentID","replicateID");
 	}
+	//if(iter_count&255 == 255){
+   //   FILE *genomeFile = fopen((genomeFileNameBase+string(".")+std::to_string(iter_count)).c_str(), "w+t");
+	//	for(int i=0;i<genome.size();i++)
+	//		fprintf(genomeFile,"	%i",genome[i]);
+	//	fprintf(genomeFile,"\n");
+   //   fclose(genomeFile);
+	//}
 	if(ancestor!=NULL) {
-		ancestor->saveLOD(statsFile,genomeFile, experimentID, replicateID, born);
+		ancestor->saveLOD_recursive(statsFile,genomeFileNameBase, experimentID, replicateID, born, ++iter_count);
 	} 
 	for (int i=born; i<progenitorDOB; ++i) {
-		fprintf(statsFile,"%i	%i	%f	%i	%i	%f	%f	%f	%s	%i\n",born,(int)genome.size(),fitness,correct,incorrect,Phi,R,Topology,experimentID.c_str(),replicateID);
-	}
-	if(false){
-		fprintf(genomeFile,"%i	",ID);
-		for(int i=0;i<genome.size();i++)
-			fprintf(genomeFile,"	%i",genome[i]);
-		fprintf(genomeFile,"\n");
+  fprintf(statsFile,"%i %i %f %i %i %f %f %f %f %f %f %f %s %i\n",born,(int)genome.size(),fitness,correct,incorrect,Phi,R,Diameter,Connectedness,Sparseness,PIs2s,PIs2m,experimentID.c_str(),replicateID);
 	}
 	
+}
+
+void tAgent::saveLOD(FILE *statsFile, const char* genomeFileNameBase, string experimentID, int replicateID, int progenitorDOB){
+   int iter_count = 0;
+   saveLOD_recursive(statsFile, genomeFileNameBase, experimentID, replicateID, progenitorDOB, iter_count);
 }
 
 void tAgent::showPhenotype(void){
@@ -269,6 +281,23 @@ void tAgent::saveEdgeList(const char *filename){
 	fclose(f);
 }
 
+double tAgent::gammaIndex() { // connectivity of brain
+    int M[maxNodes][maxNodes];
+    int i,j,k;
+    for(i=0;i<maxNodes;i++)
+        for(j=0;j<maxNodes;j++)
+            M[i][j]=0;
+    for(i=0;i<(int)hmmus.size();i++)
+        for(j=0;j<(int)hmmus[i]->ins.size();j++)
+            for(k=0;k<(int)hmmus[i]->outs.size();k++)
+                M[hmmus[i]->ins[j]][hmmus[i]->outs[k]]=1;
+    k=0;
+    for(i=0;i<maxNodes;i++)
+        for(j=0;j<maxNodes;j++)
+            k+=M[i][j];
+    return (double)k/(double)(maxNodes*maxNodes);
+}
+
 vector<vector<int> > tAgent::getBrainMap(void){
     vector<vector<int> > M;
     int i,j,k;
@@ -279,9 +308,9 @@ vector<vector<int> > tAgent::getBrainMap(void){
         for(j=0;j<maxNodes;j++)
             M[i][j]=0;
     }
-	for(i=0;i<hmmus.size();i++){
-		for(j=0;j<hmmus[i]->ins.size();j++)
-            for(k=0;k<hmmus[i]->outs.size();k++)
+	for(i=0;i<(int)hmmus.size();i++){
+		for(j=0;j<(int)hmmus[i]->ins.size();j++)
+            for(k=0;k<(int)hmmus[i]->outs.size();k++)
                 M[hmmus[i]->ins[j]][hmmus[i]->outs[k]]=1;
 	}
     return M;
@@ -324,6 +353,9 @@ vector<vector<int> > tAgent::getDistMap(vector<vector<int> > M){
 				 cdist[j][k]=cdistNew[j][k];
 		 ++steps;
     } while(newRecords);
+	 for (j=maxNodes-1; j>=0; --j) { /// zero out diagonals, otherwise they are the longest
+		 dist[j][j]=0;
+	 }
     return dist;
 }
 

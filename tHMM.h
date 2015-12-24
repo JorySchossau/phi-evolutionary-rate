@@ -36,7 +36,6 @@ public:
 	void setupQuick(vector<unsigned char> &genome, int start);
 	void update(unsigned char *states,unsigned char *newStates);
 	void show(void);
-	
 };
 
 #endif

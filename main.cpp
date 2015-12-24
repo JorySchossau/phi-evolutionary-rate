@@ -30,23 +30,32 @@ int update=0;
 size_t repeats=1;
 int maxAgent=100;
 int totalGenerations=200;
+const int mp=1;
+int gameID=0;
 
 enum class Selection : int {
 		task = 1,
 		phi = 2,
 		r = 4,
-		topology = 8,
+		diameter = 8,
 		genome = 16,
-		none = 32
-};
+		none = 32,
+      sparseness = 64, // sparseness and connectedness are inverses of each other
+      connectedness = 128,
+      predIs2s = 256,
+      predIs2m = 512 };
 
 map<string, Selection> SelectionValues{
  make_pair("task",Selection::task),
  make_pair("phi",Selection::phi),
  make_pair("r",Selection::r),
- make_pair("topology",Selection::topology),
+ make_pair("diameter",Selection::diameter),
  make_pair("genome",Selection::genome),
- make_pair("none",Selection::none)
+ make_pair("none",Selection::none),
+ make_pair("sparseness",Selection::sparseness),
+ make_pair("connectedness",Selection::connectedness),
+ make_pair("predictiveISensorsToSensors",Selection::predIs2s),
+ make_pair("predictiveISensorsToMotors",Selection::predIs2m)
 };
 
 bool isaSelectionValue(string value) {
@@ -59,23 +68,43 @@ bool isaSelectionValue(string value) {
 void computeLOD(FILE *f,FILE *g, tAgent *agent,tGame *game);
 const char* cstr(string s) { return s.c_str(); }
 
-// evaluates a subsection of the population
+// processes a subsection of the population
 void threadedEvaluateFitness(int chunkBegin, int chunkEnd, const vector<tAgent*>& agents, tGame& game, int& evaluations) {
 	for (int chunk_index=chunkBegin; chunk_index<chunkEnd; chunk_index++) {
 		for (int replicate_i=0; replicate_i < evaluations; replicate_i++) {
-			game.executeGame(agents[chunk_index], 2, nullptr, true, -1, -1);
+         switch(gameID) {
+            case 0: // block catcher
+            game.executeGame(agents[chunk_index], 2, nullptr, true, -1, -1);
+               break;
+            case 1: // random generator
+            game.executeGame2(agents[chunk_index]);
+               break;
+            default: // same as 0
+            game.executeGame(agents[chunk_index], 2, nullptr, true, -1, -1);
+               break;
+         }
 			agents[chunk_index]->fitnesses.push_back(agents[chunk_index]->fitness);
 		}
 	}
 }
 
+void show(vector<vector<int>>& v) {
+   size_t x=0,y=0;
+   cout << endl;
+   for (x=0; x<v.size(); x++) {
+      for (y=0; y<v[x].size(); y++) {
+         cout << v[x][y] << "  ";
+      }
+      cout << endl;
+   }
+}
 int main(int argc, char *argv[]) {
 	string experimentID;
 	int replicateID=0;
 	vector<tAgent*>agent;
 	vector<tAgent*>nextGen;
 	int who=0;
-	size_t i, j;
+	size_t i;
 	tAgent *masterAgent=nullptr;
 	tGame *game=nullptr;
 	FILE *LODFile=nullptr;
@@ -88,11 +117,12 @@ int main(int argc, char *argv[]) {
 	vector<string> selectionOn;
 	int startGenes;
 	bool stopOnLimit;
-	int selectionRegime = 0; // bitmask for how to perform selection (fitness, phi, r, topology, genome)
+	int selectionRegime = 0; // bitmask for how to perform selection (fitness, phi, r, diameter, genome)
 	int nregimes = 0;
 	int evaluations=0;						// how many times to test evaluating fitness of an agent
 	string filenameLOD, filenameGenome, filenameStartWith;
 	int nthreads=0;
+   //int exportLODgenomes=0;
 	vector<thread> threads;
 
 	addp(TYPE::BOOL, &showhelp);
@@ -106,9 +136,11 @@ int main(int argc, char *argv[]) {
 	addp(TYPE::INT, &startGenes, "5000", false, "--startGenes", "number of genes with which first organisms begin.");
 	addp(TYPE::INT, &evaluations, "1", false, "--evaluations", "number of evaluations for an agent's fitness evaluation.");
 	addp(TYPE::INT, &nthreads, "1", false, "--nthreads", (string("number of threads to use. This system reports ")+to_string(thread::hardware_concurrency())+string(" cores available.")).c_str());
-	addp(TYPE::STRING, &selectionOn, -1, false, "--selectionOn", "list of parameters on which to perform selection. Valid options are: task, phi, r, topology, genome, none.");
+	addp(TYPE::STRING, &selectionOn, -1, false, "--selectionOn", "list of parameters on which to perform selection. Valid options are: task, phi, r, diameter, genome, none.");
 	addp(TYPE::INT, &regimeGenLimit, "-1", false, "--regimeGenLimit", "generation limit to use in all regimes before going back to task fitness.");
 	addp(TYPE::FLOAT, &regimeValueLimit, "-1", false, "--regimeValueLimit", "value limit to use in all regimes before going back to task fitness.");
+   //addp(TYPE::INT, &exportLODgenomes, "-1", false, "--exportLODgenomes", "number of generations between export snapshots of the genomes along LOD.");
+   addp(TYPE::INT, &gameID, "0", false, "--gameID", "which game to use? {0:catcher, 1:randomness}");
 	argparse(argv);
 	if (showhelp) {
 		cout << argdetails() << endl;
@@ -123,8 +155,10 @@ int main(int argc, char *argv[]) {
 	/// inputs for selectionRegime from --selectionOn
 	if (selectionOn.size() == 0) {
 		selectionOn.push_back("task");
+		//cout << "no regimes specified for selection after --selectionOn option." << endl;
+		//cout << endl;
+		//exit(1);
 	}
-
 	for (string& argument : selectionOn) {
 		if (isaSelectionValue(argument)) {
 			selectionRegime |= (int)SelectionValues[argument];
@@ -176,7 +210,7 @@ int main(int argc, char *argv[]) {
 	nextGen.resize(agent.size());
 	masterAgent->nrPointingAtMe--;
 	cout<<"setup complete"<<endl;
-	printf("%s	%s	%s	%s	%s	%s	%s\n", "update","(double)maxFitness","maxPhi","r", "maxTopology", "agent[who]->correct","agent[who]->incorrect");
+ printf("%s %s %s %s %s %s %s %s %s %s %s\n", "update","(double)maxFitness","maxPhi","r", "maxDiameter", "connectedness", "sparseness","maxPIs2s","maxPIs2m", "agent[who]->correct","agent[who]->incorrect");
 
 	while(update<totalGenerations) {
 		for(i=0;i<agent.size();i++) {
@@ -202,22 +236,81 @@ int main(int argc, char *argv[]) {
 		for(i=0;i<agent.size();i++) {
 			tempFitness = 1.0f;
 			if ((selectionRegime & (int)Selection::task) == (int)Selection::task) {
-				tempFitness *= (((float)agent[i]->correct - (float)agent[i]->incorrect) / 80.0f) + 1.0f;
+            switch(gameID) {
+               case 0:
+                  tempFitness *= pow(fitnessPower,agent[i]->correct - agent[i]->incorrect);
+                  break;
+               case 1:
+                  tempFitness *= pow(fitnessPower,(agent[i]->fitness / 120.0f) * 80.0f);
+                  break;
+            }
 			}
-			// use separate variables
-			// rule of 7
 			if ((selectionRegime & (int)Selection::phi) == (int)Selection::phi) {
-				tempFitness *= (agent[i]->Phi / 16.0f) + 1.0f;
+            switch(gameID) {
+               case 0:
+               case 1:
+                  tempFitness *= agent[i]->Phi/16.0f + 1.0f;
+                  break;
+            }
 			}
 			if ((selectionRegime & (int)Selection::r) == (int)Selection::r) {
-				tempFitness *= (agent[i]->R / 4.0f) + 1.0f;
+            switch(gameID) {
+               case 0:
+                  tempFitness *= agent[i]->R/4.0f + 1.0f;
+                  break;
+               case 1:
+                  // Do nothing for R
+                  break;
+            }
 			}
-			if ((selectionRegime & (int)Selection::topology) == (int)Selection::topology) {
-				tempFitness *= (agent[i]->Topology / 100.0f) + 1.0f;
+			if ((selectionRegime & (int)Selection::diameter) == (int)Selection::diameter) {
+            switch(gameID) {
+               case 0:
+               case 1: // do same for both
+                  tempFitness *= (agent[i]->Diameter / 16.0f) + 1.0f;
+                  break;
+            }
 			}
+         if ((selectionRegime & (int)Selection::connectedness) == (int)Selection::connectedness) {
+            switch(gameID) {
+               case 0:
+               case 1: // do same for both
+                  tempFitness *= agent[i]->Connectedness + 1.0f;
+                  break;
+            }
+         }
+         if ((selectionRegime & (int)Selection::sparseness) == (int)Selection::sparseness) {
+            switch(gameID) {
+               case 0:
+               case 1: // do same for both
+                  tempFitness *= agent[i]->Sparseness + 1.0f;
+                  break;
+            }
+         }
 			if ((selectionRegime & (int)Selection::genome) == (int)Selection::genome) {
-				tempFitness *= (agent[i]->genome.size() / 20000.0f) + 1.0f;
+            switch(gameID) {
+               case 0:
+               case 1: // do same for both
+                  tempFitness *= (agent[i]->genome.size() / 20000.0f) + 1.0f;
+                  break;
+            }
 			}
+         if ((selectionRegime & (int)Selection::predIs2s) == (int)Selection::predIs2s) {
+            switch(gameID) {
+               case 0:
+               case 1:
+                  tempFitness *= agent[i]->PIs2s + 1.0f;
+                  break;
+            }
+         }
+         if ((selectionRegime & (int)Selection::predIs2m) == (int)Selection::predIs2m) {
+            switch(gameID) {
+               case 0:
+               case 1:
+                  tempFitness *= agent[i]->PIs2m + 1.0f;
+                  break;
+            }
+         }
 			if ((selectionRegime & (int)Selection::none) == (int)Selection::none) {
 				tempFitness = 2.0f;
 				agent[i]->correct = 0;
@@ -225,10 +318,10 @@ int main(int argc, char *argv[]) {
 				agent[i]->fitness = 1.0f;
 				agent[i]->R = 1.0f;
 				agent[i]->Phi = 1.0f;
+            agent[i]->Connectedness = 1.0f;
+            agent[i]->Sparseness = 1.0f;
 			}
-			tempFitness -= 1.0f;
-			tempFitness /= pow(2.0f, nregimes)-1.0f; // normalize the multiplied value back to [0-1] depending how num multiplications there were
-			agent[i]->fitness = pow(fitnessPower,tempFitness*80.0f);
+			agent[i]->fitness = tempFitness;
 			if (tempFitness > maxFitness) {
 				maxFitness = tempFitness;
 				who = i;
@@ -236,8 +329,6 @@ int main(int argc, char *argv[]) {
 		}
 		if ((selectionRegime & (int)Selection::none) == (int)Selection::none) {
 			maxFitness = -1.0f;
-		} else {
-			maxFitness = pow(fitnessPower, maxFitness*80.0f);
 		}
 
 		/// regime switch conditions
@@ -255,18 +346,18 @@ int main(int argc, char *argv[]) {
 			}
 		}
 			// convert maxValue to 0-100
-		printf("%i	%f	%f	%f	%f	%i	%i\n", update, maxFitness, agent[who]->Phi, agent[who]->R, agent[who]->Topology, agent[who]->correct, agent[who]->incorrect);
+  printf("%i %f %f %f %f %f %f %f %f %i %i\n", update, maxFitness, agent[who]->Phi, agent[who]->R, agent[who]->Diameter, agent[who]->Connectedness, agent[who]->Sparseness, agent[who]->PIs2s, agent[who]->PIs2m, agent[who]->correct, agent[who]->incorrect);
 
 		int j=0;
 		for(i=0;i<agent.size();i++) {
 			tAgent *d;
 			d=new tAgent;
-			if(maxFitness<0.0f){
+			if(maxFitness<=0.0f){
 				j=rand()%(int)agent.size();
 			} else {
 				do{
 					j=rand()%(int)agent.size();
-				} while(randDouble>( agent[j]->fitness / maxFitness ));
+				} while((j==(int)i)||(randDouble>( agent[j]->fitness / maxFitness )));
 			}
 			d->inherit(agent[j],perSiteMutationRate,update);
 			nextGen[i]=d;
@@ -283,7 +374,7 @@ int main(int argc, char *argv[]) {
 		update++;
 	}
 	
-	agent[0]->ancestor->saveLOD(LODFile,genomeFile, experimentID, replicateID, -1); // -1 to tell saveLOD to make header for csv
+	agent[0]->ancestor->saveLOD(LODFile,cstr(filenameGenome), experimentID, replicateID, -1); // -1 to tell saveLOD to make header for csv
 	if (stopOnLimit) {
 		float maxPhi=0.0;
 		tAgent* bestAgent=nullptr;

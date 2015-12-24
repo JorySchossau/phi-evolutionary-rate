@@ -19,6 +19,62 @@ tGame::tGame(){
 tGame::~tGame(){
 }
 
+void tGame::executeGame2(tAgent* agent){
+   vector<int> phiBuffer,R0;
+   agent->fitness=0.0;
+   agent->resetBrain();
+   string S,C,D="";
+   map<string,int> theBuffer;
+   int L=2;
+   theBuffer["0"]=0;
+   theBuffer["1"]=1;
+   S="0";
+   for(int n=0;n<500;n++){
+      agent->states[0]=(n&1);
+      int I=0;
+      for(int i=0;i<maxNodes;i++)
+         I=(I<<1)+agent->states[i];
+      R0.push_back(I);
+      agent->updateStates();
+      I=0;
+      for(int i=0;i<maxNodes;i++)
+         I=(I<<1)+agent->states[i];
+      phiBuffer.push_back(I);
+      if(agent->states[maxNodes-1]==0)
+         C="0";
+      else
+         C="1";
+      D=D+C;
+      if(theBuffer.find(S+C)!=theBuffer.end()){
+         S.append(C);
+      } else {
+         theBuffer[S+C]=L;
+         L++;
+         S=C;
+         agent->fitness+=1.0;
+      }
+   }
+   agent->Phi = computeAtomicPhi(phiBuffer, maxNodes);
+   agent->R = 0.0f;
+	agent->extra=1.0;
+   agent->correct = L;
+   agent->incorrect = 1;
+   agent->Connectedness = 0.0f;
+   agent->Sparseness = 0.0f;
+   agent->PIs2s=predictiveInformation_sensors_to_sensors(R0,1);
+   agent->PIs2m=predictiveInformation_sensors_to_motors(R0,phiBuffer,1,1);
+	vector<vector<int>> paths = agent->getDistMap(agent->getBrainMap());
+	int longestPath(0);
+	int sumPath(0);
+	for (auto& row : paths) {
+		for (int& pathLength: row) {
+			if (pathLength > longestPath) longestPath = pathLength;
+		}
+	}
+	agent->Diameter = longestPath;
+   agent->Connectedness = agent->gammaIndex();
+   agent->Sparseness = 1.0-agent->Connectedness;
+}
 
 vector<vector<int> > tGame::executeGame(tAgent* agent,int paddleWidth,FILE *f,bool logStates,int ko, int setTo){
 	int spB,w,d,u;
@@ -158,14 +214,19 @@ vector<vector<int> > tGame::executeGame(tAgent* agent,int paddleWidth,FILE *f,bo
 	agent->Phi=computeAtomicPhi(retValue[0], maxNodes);
 	agent->R=computeR(RValue,0);
 	agent->extra=1.0;
+   agent->PIs2s=predictiveInformation_sensors_to_sensors(R0,4);
+   agent->PIs2m=predictiveInformation_sensors_to_motors(R0,R1,4,2);
 	vector<vector<int>> paths = agent->getDistMap(agent->getBrainMap());
 	int longestPath(0);
 	int sumPath(0);
 	for (auto& row : paths) {
-		sumPath=accumulate(begin(row), end(row), 0);
-		if (sumPath > longestPath) longestPath = sumPath;
+		for (int& pathLength: row) {
+			if (pathLength > longestPath) longestPath = pathLength;
+		}
 	}
-	agent->Topology = longestPath;
+	agent->Diameter = longestPath;
+   agent->Connectedness = agent->gammaIndex();
+   agent->Sparseness = 1.0-agent->Connectedness;
 	return retValue;
 }
 
@@ -339,6 +400,32 @@ double tGame::predictiveI(vector<int>A){
 		I.push_back(A[i]&3);
 	}
 	return mutualInformation(S, I);
+}
+
+double tGame::predictiveInformation_sensors_to_motors(vector<int>A, vector<int>B, int n_sensors, int  n_actuators){
+   vector<int> S,I;
+   S.clear(); I.clear();
+   size_t limit = A.size()-1;
+   for(size_t i=0;i<limit;i++){
+      //S.push_back((B[i]>>12)&15); // actuators time t+1
+      //I.push_back(A[i]&3); // sensors time t
+      S.push_back((B[i]>>(maxNodes-n_actuators))&(maxNodes-1)); // actuators time t+1
+      I.push_back(A[i]&((1<<n_sensors)-1)); // sensors time t
+   }
+   return mutualInformation(S, I);
+}
+
+double tGame::predictiveInformation_sensors_to_sensors(vector<int>A, int n_sensors){
+   vector<int> S,I;
+   S.clear(); I.clear();
+   size_t limit = A.size()-1;
+   for(size_t i=0;i<limit;i++){
+      //S.push_back(A[i]&3); // sensors time t
+      //I.push_back(A[i+1]&3); // sensors time t+1
+      S.push_back(A[i]&((1<<n_sensors)-1)); // sensors time t
+      I.push_back(A[i+1]&((1<<n_sensors)-1)); // sensors time t+1
+   }
+   return mutualInformation(S, I);
 }
 
 double tGame::nonPredictiveI(vector<int>A){

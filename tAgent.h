@@ -34,7 +34,7 @@ public:
 	vector<unsigned char> genome;
 	vector<tDot> dots;
 	double extra;
-	double H,nH,Phi,R,Topology;
+	double H,nH,Phi,R,Diameter,Connectedness,Sparseness,PIs2s,PIs2m;
 	tAgent *ancestor;
 	unsigned int nrPointingAtMe;
 	unsigned char states[maxNodes],newStates[maxNodes];
@@ -68,13 +68,15 @@ public:
 	void saveToDot(const char *filename);
 	void saveToDotFullLayout(const char *filename);
    void saveEdgeList(const char *filename);
+   double gammaIndex();
 	vector<vector<int> > getBrainMap(void);
 	vector<vector<int> > getDistMap(vector<vector<int> > M);
 	
 	void initialize(int x, int y, int d);
 	tAgent* findLMRCA(void);
 	void saveFromLMRCAtoNULL(FILE *statsFile,FILE *genomeFile);
-	void saveLOD(FILE *statsFile,FILE *genomeFile, string experimentID, int replicateID, int progenitorDOB);
+	void saveLOD_recursive(FILE *statsFile, const char* genomeFileNameBase, string experimentID, int replicateID, int progenitorDOB, int& iter_count);
+	void saveLOD(FILE *statsFile, const char* genomeFile, string experimentID, int replicateID, int progenitorDOB);
 	void retire(void);
 	void setupDots(int x, int y,double spacing);
 	void saveLogicTable(FILE *f);

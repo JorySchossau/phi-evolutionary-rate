@@ -28,7 +28,8 @@ using namespace std;
 
 class tGame{
 	public:
-		vector<vector<int> > executeGame(tAgent* const agent,int paddleWidth,FILE *f,bool logStates,int ko, int setTo);
+		void executeGame2(tAgent* const agent);
+		vector<vector<int> > executeGame(tAgent* const agent,int paddleWidth,FILE *f, bool recordStates,int ko, int setTo);
 		tGame();
 		~tGame();
 		void getTableForPhi(tAgent *agent,char *filename);
@@ -39,6 +40,8 @@ class tGame{
 		double ei(vector<int> A,vector<int> B,int theMask);
 		double computeAtomicPhi(vector<int> A,int states);
 		double predictiveI(vector<int>A);
+      double predictiveInformation_sensors_to_motors(vector<int>A,vector<int>B,int n_sensors,int n_actuators);
+      double predictiveInformation_sensors_to_sensors(vector<int>A,int n_sensors); 
 		double nonPredictiveI(vector<int>A);
 		double predictNextInput(vector<int>A);
 		double computeR(vector<vector<int> > table,size_t howFarBack);
